@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Min-Max Program · Jeff Nippard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0e0e0f; --bg2: #161618; --bg3: #1e1e21; --bg4: #252528;
+    --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
+    --text: #f0efe8; --text2: #9998a0; --text3: #5e5d66;
+    --red: #e8453c; --blue: #3b82f6; --blue-dim: rgba(59,130,246,0.1);
+    --blue-border: rgba(59,130,246,0.3); --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.1); --amber-border: rgba(245,158,11,0.3);
+    --green: #22c55e; --green-dim: rgba(34,197,94,0.1);
+    --radius: 12px; --radius-sm: 8px;
+    --font-display: 'Barlow Condensed', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  html { background: var(--bg); }
+  body { font-family: var(--font-body); background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; overscroll-behavior-y: none; }
+
+  .site-header { position: sticky; top: 0; z-index: 100; background: rgba(14,14,15,0.92); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 0 20px; }
+  .header-inner { max-width: 720px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 56px; gap: 12px; }
+  .header-title { font-family: var(--font-display); font-size: 20px; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase; }
+  .header-title span { color: var(--red); }
+  .block-toggle { display: flex; background: var(--bg3); border: 1px solid var(--border); border-radius: 100px; padding: 3px; gap: 2px; }
+  .block-btn { padding: 5px 14px; border-radius: 100px; border: none; background: transparent; color: var(--text2); font-family: var(--font-body); font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .block-btn.active { background: var(--red); color: #fff; }
+
+  .main { max-width: 720px; margin: 0 auto; padding: 20px 16px 100px; }
+
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+  .stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 10px; text-align: center; }
+  .stat-val { font-family: var(--font-display); font-size: 22px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+  .stat-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; }
+
+  .schedule-wrap { margin-bottom: 20px; }
+  .schedule-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .schedule-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; }
+  .sched-day { border-radius: var(--radius-sm); padding: 9px 4px; text-align: center; border: 1px solid var(--border); background: var(--bg2); cursor: pointer; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+  .sched-day.rest { cursor: default; opacity: 0.4; }
+  .sched-day.highlight { border-color: rgba(255,255,255,0.2); background: var(--bg3); }
+  .sched-day-name { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .sched-day-label { font-family: var(--font-display); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; line-height: 1.2; color: var(--text); }
+  .sched-day.rest .sched-day-label { color: var(--text3); font-weight: 400; font-family: var(--font-body); font-size: 11px; }
+  .sched-day-tag { font-size: 9px; margin-top: 4px; padding: 2px 5px; border-radius: 100px; display: inline-block; }
+
+  .block-banner { border-radius: var(--radius-sm); padding: 13px 16px; margin-bottom: 16px; border: 1px solid; font-size: 13px; line-height: 1.6; color: var(--text2); transition: all 0.3s; }
+  .block-banner strong { font-weight: 500; }
+  .block-banner.b1 { background: var(--blue-dim); border-color: var(--blue-border); }
+  .block-banner.b2 { background: var(--amber-dim); border-color: var(--amber-border); }
+  .block-banner.b1 strong { color: #93c5fd; }
+  .block-banner.b2 strong { color: #fcd34d; }
+
+  .week-indicator { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 12px; color: var(--text3); }
+  .week-bar-wrap { flex: 1; height: 3px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+  .week-bar { height: 100%; border-radius: 2px; transition: width 0.4s, background 0.3s; }
+
+  .day-nav { display: flex; gap: 6px; margin-bottom: 20px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding-bottom: 2px; }
+  .day-nav::-webkit-scrollbar { display: none; }
+  .day-tab { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; padding: 9px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg2); cursor: pointer; transition: all 0.2s; min-width: 80px; -webkit-tap-highlight-color: transparent; }
+  .day-tab:hover { border-color: var(--border2); background: var(--bg3); }
+  .day-tab.active { background: var(--red); border-color: var(--red); }
+  .day-tab-num { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+  .day-tab-name { font-family: var(--font-display); font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: 0.04em; text-transform: uppercase; }
+  .day-tab.active .day-tab-num, .day-tab.active .day-tab-name { color: #fff; }
+  .day-tab-done { width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-top: 5px; opacity: 0; transition: opacity 0.3s; }
+  .day-tab-done.visible { opacity: 1; }
+
+  .day-panel { display: none; }
+  .day-panel.active { display: block; }
+  .day-heading { margin-bottom: 16px; }
+  .day-heading h2 { font-family: var(--font-display); font-size: 34px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.02em; line-height: 1; margin-bottom: 4px; }
+  .day-sub { font-size: 13px; color: var(--text2); margin-bottom: 10px; }
+  .day-meta-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .meta-chip { font-size: 11px; padding: 4px 10px; border-radius: 100px; border: 1px solid var(--border); color: var(--text2); background: var(--bg3); }
+
+  .progress-wrap { margin: 14px 0; }
+  .progress-top { display: flex; justify-content: space-between; font-size: 12px; color: var(--text3); margin-bottom: 7px; }
+  .progress-track { height: 3px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 2px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
+
+  .warmup-banner { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px; overflow: hidden; }
+  .warmup-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .warmup-icon { width: 28px; height: 28px; border-radius: 50%; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.25); display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .warmup-title { font-family: var(--font-display); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; flex: 1; }
+  .warmup-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+  .warmup-chevron { font-size: 10px; color: var(--text3); transition: transform 0.2s; }
+  .warmup-chevron.open { transform: rotate(180deg); }
+  .warmup-body { display: none; padding: 0 16px 14px; border-top: 1px solid var(--border); }
+  .warmup-body.open { display: block; }
+  .warmup-rule { font-size: 12px; color: var(--text2); line-height: 1.6; padding: 12px 0 10px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+  .warmup-rule strong { color: var(--text); font-weight: 500; }
+  .warmup-sets { display: flex; flex-direction: column; gap: 7px; }
+  .warmup-row { display: flex; align-items: center; gap: 10px; }
+  .warmup-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .warmup-row-label { font-size: 12px; font-weight: 500; color: var(--text2); min-width: 72px; }
+  .warmup-row-desc { font-size: 12px; color: var(--text3); flex: 1; }
+
+  .reset-row { display: flex; justify-content: flex-end; margin-bottom: 10px; }
+  .reset-btn { font-family: var(--font-body); font-size: 12px; color: var(--text3); background: none; border: none; cursor: pointer; padding: 4px 0; -webkit-tap-highlight-color: transparent; }
+  .reset-btn:hover { color: var(--text2); }
+  .ex-list { display: flex; flex-direction: column; gap: 10px; }
+  .ex-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color 0.2s; }
+  .ex-card.done { border-color: rgba(34,197,94,0.25); }
+  .ex-top { display: flex; align-items: flex-start; gap: 12px; padding: 15px 16px; }
+  .ex-num { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border2); background: var(--bg3); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 14px; font-weight: 700; color: var(--text2); flex-shrink: 0; margin-top: 1px; transition: all 0.2s; }
+  .ex-card.done .ex-num { background: var(--green-dim); border-color: rgba(34,197,94,0.4); color: var(--green); }
+  .ex-content { flex: 1; min-width: 0; }
+  .ex-name { font-family: var(--font-display); font-size: 17px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; color: var(--text); line-height: 1.2; margin-bottom: 3px; }
+  .ex-muscle { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+  .warmup-section-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; margin-top: 2px; }
+  .ex-sets { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+  .set-chip { padding: 5px 11px; border-radius: var(--radius-sm); font-size: 12px; font-weight: 500; border: 1px solid; line-height: 1.4; }
+  .chip-label { font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 1px; opacity: 0.7; }
+  .chip-warmup { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.2); color: #d97706; }
+  .chip-main   { background: var(--blue-dim); border-color: var(--blue-border); color: #93c5fd; }
+  .chip-drop   { background: var(--bg3); border-color: var(--border); color: var(--text2); }
+  .chip-adv    { background: var(--amber-dim); border-color: var(--amber-border); color: #fcd34d; }
+  .ex-check { width: 26px; height: 26px; border-radius: 8px; border: 1.5px solid var(--border2); background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; transition: all 0.2s; -webkit-tap-highlight-color: transparent; }
+  .ex-check:active { transform: scale(0.9); }
+  .ex-check.checked { background: var(--green); border-color: var(--green); }
+  .ex-check.checked::after { content: ''; display: block; width: 7px; height: 11px; border: 2px solid white; border-top: none; border-left: none; transform: rotate(45deg) translate(-1px, -1px); }
+  .ex-tip-toggle { display: flex; align-items: center; gap: 6px; padding: 0 16px 14px 58px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .tip-icon { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--border2); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--text3); flex-shrink: 0; }
+  .tip-label { font-size: 12px; color: var(--text3); }
+  .tip-chevron { margin-left: auto; font-size: 10px; color: var(--text3); transition: transform 0.2s; }
+  .tip-chevron.open { transform: rotate(180deg); }
+  .ex-tip-body { display: none; padding: 12px 16px 15px 58px; font-size: 13px; color: var(--text2); line-height: 1.65; border-top: 1px solid var(--border); }
+  .ex-tip-body.open { display: block; }
+
+  .bottom-note { margin-top: 24px; padding: 14px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg2); font-size: 13px; color: var(--text2); line-height: 1.65; }
+  .bottom-note strong { color: var(--text); font-weight: 500; }
+
+  @media (min-width: 600px) { .main { padding: 28px 24px 100px; } .day-heading h2 { font-size: 40px; } }
+  @media (max-width: 380px) { .stat-val { font-size: 18px; } .block-btn { padding: 5px 10px; font-size: 11px; } }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-title">Min<span>·</span>Max <span style="color:var(--text2);font-weight:400">4 Day</span></div>
+    <div class="block-toggle">
+      <button class="block-btn active" onclick="setBlock(1)">Block 1</button>
+      <button class="block-btn" onclick="setBlock(2)">Block 2</button>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-val">1–2</div><div class="stat-lbl">Sets / exer.</div></div>
+    <div class="stat-card"><div class="stat-val">0 RIR</div><div class="stat-lbl">Intensity</div></div>
+    <div class="stat-card"><div class="stat-val">~50m</div><div class="stat-lbl">Session</div></div>
+    <div class="stat-card"><div class="stat-val">2–3m</div><div class="stat-lbl">Rest</div></div>
+  </div>
+
+  <div class="schedule-wrap">
+    <div class="schedule-label">6-Day Repeating Cycle</div>
+    <div class="schedule-grid" id="schedGrid"></div>
+  </div>
+
+  <div class="block-banner b1" id="blockBanner">
+    <strong>Block 1 — Weeks 1–6 · Foundation:</strong> 1–2 hard sets per exercise to true muscular failure. Build the intensity habit before adding advanced techniques.
+  </div>
+  <div class="week-indicator">
+    <span id="weekLabel">Week 1–6</span>
+    <div class="week-bar-wrap"><div class="week-bar" id="weekBar" style="width:50%;background:var(--blue)"></div></div>
+    <span>12 wks</span>
+  </div>
+
+  <nav class="day-nav" id="dayNav"></nav>
+  <div id="panels"></div>
+
+  <div class="bottom-note" id="bottomNote">
+    <strong>The rule:</strong> Every working set ends at true muscular failure — the point where another rep with good form is impossible. Set 1 is your heaviest weight. Set 2 drops weight by 10–15%. No pump sets, no junk volume. Give everything to each set, then move on.
+  </div>
+</main>
+
+<script>
+const SCHEDULE = [
+  { label:'Day 1', name:'Upper A', tag:'Chest & Back', color:'#e8453c', di:0 },
+  { label:'Day 2', name:'Lower',   tag:'Full Legs',   color:'#22c55e', di:1 },
+  { label:'Day 3', name:'Rest',    tag:'',            color:null,      di:-1 },
+  { label:'Day 4', name:'Upper B', tag:'Shoulders',   color:'#3b82f6', di:2 },
+  { label:'Day 5', name:'Arms',    tag:'+ Delts',     color:'#a855f7', di:3 },
+  { label:'Day 6', name:'Rest',    tag:'',            color:null,      di:-1 },
+];
+
+const DAYS = [
+  {
+    label:'Upper A', num:'Day 1', title:'Upper', accent:'A',
+    sub:'Chest & Back — Primary Compound Push + Pull',
+    muscles:'Chest · Lats · Rear Delts · Lateral Delts',
+    sets:'10 working sets', color:'#e8453c',
+    exercises:[
+      { name:'Incline Barbell Press', muscle:'Upper Chest · Anterior Delt', warmup:true,
+        b1:[{label:'Set 1',text:'6–8 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'8–12 reps · drop 12%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'6–8 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 20–25%, reps to failure',cls:'chip-adv'}],
+        tip:'Incline 30–45° maximally targets the upper chest. Control the eccentric 2–3 seconds. Drive bar to your upper chest. Full stretch at the bottom is where hypertrophy stimulus is highest — resist the weight on the way down.' },
+      { name:'Chest-Supported Row', muscle:'Lats · Rhomboids · Mid Back', warmup:true,
+        b1:[{label:'Set 1',text:'8–10 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'10–12 reps · drop 12%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'8–10 reps · to failure',cls:'chip-main'},{label:'Myo-Reps',text:'Rest 10–15s · 3–5 reps × 3 mini-sets',cls:'chip-adv'}],
+        tip:'Chest support removes lower back involvement — focus purely on the back. Drive elbows back and pinch shoulder blades at peak contraction. Full stretch forward every rep — let the lats elongate completely.' },
+      { name:'Cable Crossover / Pec Deck', muscle:'Chest · Stretch + Peak Contraction',
+        b1:[{label:'Set 1',text:'10–12 reps · to failure',cls:'chip-main'}],
+        b2:[{label:'Set 1',text:'10–12 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 20–25%, continue to failure',cls:'chip-adv'}],
+        tip:'Hold peak contraction 1 second every rep. High cable pull emphasizes lower-outer chest. The eccentric stretch phase is where hypertrophy happens — resist the weight as arms open.' },
+      { name:'Lat Pulldown', muscle:'Lats · Biceps · Teres Major',
+        b1:[{label:'Set 1',text:'8–10 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'10–12 reps · drop 12%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'8–10 reps · to failure',cls:'chip-main'},{label:'Myo-Reps',text:'Rest 10–15s · 3–5 reps × 3 mini-sets',cls:'chip-adv'}],
+        tip:'Pull to your upper chest, not behind the neck. Think "elbows to hip pockets". Full stretch at the top — let the lats elongate completely before pulling. Wide or neutral grip both work well.' },
+      { name:'Cable Lateral Raise', muscle:'Lateral Deltoid',
+        b1:[{label:'Set 1',text:'12–15 reps · to failure',cls:'chip-main'}],
+        b2:[{label:'Set 1',text:'12–15 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 30–40%, continue to failure',cls:'chip-adv'}],
+        tip:'Cable keeps constant tension throughout. Raise to ear height, pinky slightly above thumb. 3-second eccentric — most people rush these. Own the negative, that\'s where the work is.' }
+    ]
+  },
+  {
+    label:'Lower', num:'Day 2', title:'Lower', accent:'Body',
+    sub:'Full Lower — Quads, Hamstrings, Glutes, Calves & Core',
+    muscles:'Quads · Hamstrings · Glutes · Calves · Core · Spinal Erectors',
+    sets:'15 working sets', color:'#22c55e',
+    exercises:[
+      { name:'Barbell Back Squat', muscle:'Quads · Glutes · Core', warmup:true,
+        b1:[{label:'Set 1',text:'6–8 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'8–12 reps · drop 12%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'6–8 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 15–20%, reps to failure',cls:'chip-adv'}],
+        tip:'Hips below parallel — no partial squats. Drive knees out throughout. Bar on upper traps. Your primary quad builder — give it your best energy at the top of the session when you\'re freshest.' },
+      { name:'Romanian Deadlift', muscle:'Hamstrings · Glutes · Spinal Erectors', warmup:true,
+        b1:[{label:'Set 1',text:'6–8 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'8–12 reps · drop 12%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'6–8 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 15%, reps to failure',cls:'chip-adv'}],
+        tip:'Soft knee bend, hinge at the hips. Bar stays close to your legs all the way down. Feel a deep hamstring stretch at the bottom — that\'s your target tissue. Don\'t turn this into a squat.' },
+      { name:'Leg Press', muscle:'Quads · Glutes',
+        b1:[{label:'Set 1',text:'8–12 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'10–15 reps · drop 10%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'8–12 reps · to failure',cls:'chip-main'},{label:'Myo-Reps',text:'Rest 10–15s · 4–5 reps × 3 mini-sets',cls:'chip-adv'}],
+        tip:'Never lock out — keep constant quad tension. Lower foot placement = more quad emphasis. Don\'t let your lower back round off the pad. Full depth every rep, controlled descent throughout.' },
+      { name:'Seated Leg Curl', muscle:'Hamstrings · Full Stretch Position',
+        b1:[{label:'Set 1',text:'10–12 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'12–15 reps · drop 10%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'10–12 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 25–30%, continue to failure',cls:'chip-adv'}],
+        tip:'Seated keeps hips flexed, placing hamstrings in a lengthened position throughout — maximizes hypertrophy stimulus. Slow 3-second eccentric. Don\'t let the weight slam down at the end.' },
+      { name:'Hip Thrust (Barbell)', muscle:'Glutes · Hamstrings',
+        b1:[{label:'Set 1',text:'8–12 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'10–15 reps · drop 10%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'8–12 reps · to failure',cls:'chip-main'},{label:'Myo-Reps',text:'Rest 10–15s · 4–5 reps × 3 mini-sets',cls:'chip-adv'}],
+        tip:'Shoulder blades on bench, bar above hip crease with pad. Drive hips straight up — squeeze glutes hard at the top. Don\'t hyperextend lower back at the peak. Best glute activation exercise.' },
+      { name:'Standing Calf Raise', muscle:'Gastrocnemius',
+        b1:[{label:'Set 1',text:'10–12 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'12–15 reps · drop 12%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'10–12 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 25%, continue to failure',cls:'chip-adv'}],
+        tip:'Full stretch at the bottom — hold 1 full second in the hole. Rise slowly. Calves need full range + high tension, not bouncing. Pause and squeeze hard at the top every single rep.' },
+      { name:'Seated Calf Raise', muscle:'Soleus · Calf Thickness',
+        b1:[{label:'Set 1',text:'12–15 reps · to failure',cls:'chip-main'}],
+        b2:[{label:'Set 1',text:'12–15 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 25%, continue to failure',cls:'chip-adv'}],
+        tip:'Seated isolates the soleus — the deep calf muscle responsible for thickness. Tempo: 2 sec up, 2 sec hold, 3 sec down. Often skipped but critical for full calf development. Don\'t rush it.' },
+      { name:'Back Extension (45° or Machine)', muscle:'Spinal Erectors · Glutes · Hamstrings',
+        b1:[{label:'Set 1',text:'10–15 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'10–15 reps · drop weight or BW',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'10–15 reps · to failure',cls:'chip-main'},{label:'Myo-Reps',text:'Rest 10–15s · 4–5 reps × 3 mini-sets',cls:'chip-adv'}],
+        tip:'Hold a plate to your chest for added resistance, or use the machine with a weight stack. Hinge at the hips — don\'t just round your back. Squeeze your glutes hard at the top. Keep the neck neutral throughout. An excellent spinal erector builder that directly transfers to your squat and RDL strength.' },
+      { name:'Crunch Machine', muscle:'Rectus Abdominis · Core',
+        b1:[{label:'Set 1',text:'12–15 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'12–15 reps · drop weight',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'12–15 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 25–30%, continue to failure',cls:'chip-adv'}],
+        tip:'Curl your rib cage toward your pelvis — not your head to the floor. The machine keeps resistance constant throughout the range unlike floor crunches. Slow 2-second eccentric on every rep. Pause at peak contraction and squeeze the abs hard before releasing. Don\'t use momentum.' }
+    ]
+  },
+  {
+    label:'Upper B', num:'Day 4', title:'Upper', accent:'B',
+    sub:'Shoulders & Back — OHP + Pull-Up Focus',
+    muscles:'Shoulders · Lats · Upper Back · Rear Delts',
+    sets:'10 working sets', color:'#3b82f6',
+    exercises:[
+      { name:'Overhead Press', muscle:'Anterior + Lateral Delt · Triceps', warmup:true,
+        b1:[{label:'Set 1',text:'6–8 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'8–10 reps · drop 12%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'6–8 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 15–20%, reps to failure',cls:'chip-adv'}],
+        tip:'Press to full lockout — shoulders are built by completing the movement. Brace core hard throughout. Elbows slightly forward of bar, not flared wide. Bar path arcs slightly forward of vertical.' },
+      { name:'Weighted Pull-Up / Chin-Up', muscle:'Lats · Biceps · Teres Major', warmup:true,
+        b1:[{label:'Set 1',text:'6–8 reps · add weight to failure',cls:'chip-main'},{label:'Set 2',text:'8–10 reps · bodyweight / less',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'6–8 reps · to failure',cls:'chip-main'},{label:'Myo-Reps',text:'Rest 15s · 2–3 reps × 3 mini-sets',cls:'chip-adv'}],
+        tip:'Full dead-hang at the bottom — no kipping, no partial reps. Chest to bar at the top. The single best lat builder in the program. Prioritize it when fresh. Add belt weight when bodyweight is easy.' },
+      { name:'Low-to-High Cable Fly', muscle:'Upper Chest · Anterior Delt',
+        b1:[{label:'Set 1',text:'10–12 reps · to failure',cls:'chip-main'}],
+        b2:[{label:'Set 1',text:'10–12 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 20%, continue to failure',cls:'chip-adv'}],
+        tip:'Pull from low pulley up and across to shoulder height. Different angle to Day 1 crossover. The deep stretch at the bottom loads the pec through its fullest range — don\'t rush through the bottom.' },
+      { name:'Single-Arm Cable Row', muscle:'Rhomboids · Mid Traps · Rear Delts',
+        b1:[{label:'Set 1',text:'10–12 reps/side · to failure',cls:'chip-main'}],
+        b2:[{label:'Set 1',text:'10–12 reps · to failure',cls:'chip-main'},{label:'Myo-Reps',text:'Rest 10s · 3–4 reps × 3 mini-sets',cls:'chip-adv'}],
+        tip:'Drive your elbow back as far as possible. Allow slight torso rotation to maximise the stretch. Targets mid-back thickness that bilateral rows can miss. Control the return completely.' },
+      { name:'Face Pull', muscle:'Rear Deltoid · External Rotators',
+        b1:[{label:'Set 1',text:'12–15 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'15–20 reps · drop 10%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'12–15 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 25%, continue to failure',cls:'chip-adv'}],
+        tip:'Rope at eye level. Pull to your forehead — elbows high and flared wide. Externally rotate at the finish so thumbs point back. Critical for shoulder health and rear delt development — never skip it.' }
+    ]
+  },
+  {
+    label:'Arms+Delts', num:'Day 5', title:'Arms +', accent:'Delts',
+    sub:'Biceps · Triceps · Lateral & Rear Deltoids · Forearms',
+    muscles:'Biceps · Triceps · Lateral Delts · Rear Delts · Forearms',
+    sets:'14 working sets', color:'#a855f7',
+    exercises:[
+      { name:'Barbell / EZ-Bar Curl', muscle:'Biceps · Both Heads', warmup:true,
+        b1:[{label:'Set 1',text:'8–10 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'10–12 reps · drop 12%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'8–10 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 20%, continue to failure',cls:'chip-adv'}],
+        tip:'Elbows pinned to your sides — no swinging. Supinate hard at the top. Full extension at the bottom — the stretch is where growth happens most. Don\'t cut the range of motion short.' },
+      { name:'Triceps Rope Pushdown', muscle:'Lateral + Medial Triceps Head', warmup:true,
+        b1:[{label:'Set 1',text:'8–10 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'10–12 reps · drop 12%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'8–10 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 25%, continue to failure',cls:'chip-adv'}],
+        tip:'Flare the rope handles outward at the bottom. Elbows locked to sides. Full extension every rep — don\'t stop at 90°. The lateral head creates the horseshoe shape — own the lockout every rep.' },
+      { name:'Dumbbell / Cable Lateral Raise', muscle:'Lateral Deltoid · Shoulder Width',
+        b1:[{label:'Set 1',text:'12–15 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'15–20 reps · drop 10%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'12–15 reps · to failure',cls:'chip-main'},{label:'Myo-Reps',text:'Rest 10s · 5 reps × 4 mini-sets',cls:'chip-adv'}],
+        tip:'Slight forward lean. Raise to ear level, pinky slightly higher than thumb. 3-second eccentric. Lateral raises with myo-reps in Block 2 produce exceptional shoulder width stimulus.' },
+      { name:'Incline Dumbbell Curl', muscle:'Biceps Long Head · Stretch',
+        b1:[{label:'Set 1',text:'10–12 reps · to failure',cls:'chip-main'}],
+        b2:[{label:'Set 1',text:'10–12 reps · to failure',cls:'chip-main'},{label:'Myo-Reps',text:'Rest 10s · 3–4 reps × 3 mini-sets',cls:'chip-adv'}],
+        tip:'Incline places the long head in a maximally stretched position. Arms hang fully behind the body. Supinate as you curl. Zero swinging — pure isolation. This hits what standing curls miss.' },
+      { name:'Overhead Tricep Extension', muscle:'Long Head Triceps · Stretch',
+        b1:[{label:'Set 1',text:'10–12 reps · to failure',cls:'chip-main'}],
+        b2:[{label:'Set 1',text:'10–12 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 20%, continue to failure',cls:'chip-adv'}],
+        tip:'Overhead position fully stretches the long head — the largest triceps head. Elbows pointed forward, not flared out. The deep stretch at the bottom is the most important moment of every rep.' },
+      { name:'Rear Delt Fly', muscle:'Rear Deltoid · Lower Traps',
+        b1:[{label:'Set 1',text:'12–15 reps · to failure',cls:'chip-main'}],
+        b2:[{label:'Set 1',text:'12–15 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 30%, continue to failure',cls:'chip-adv'}],
+        tip:'Hinge forward at the waist, arms slightly bent. Raise elbows out and back — think "show your armpits". Rear delts make shoulders look 3D from every angle. Never skip them on arm day.' },
+      { name:'Barbell Wrist Curl', muscle:'Forearm Flexors · Wrist Flexors', warmup:false,
+        b1:[{label:'Set 1',text:'15–20 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'15–20 reps · drop 10%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'15–20 reps · to failure',cls:'chip-main'},{label:'Drop Set',text:'Drop 20%, continue to failure',cls:'chip-adv'}],
+        tip:'Sit at the end of a bench, forearms resting on your thighs, palms facing up. Let the bar roll to your fingertips at the bottom for a full stretch, then curl the wrists up to full contraction. Keep forearms flat on your thighs throughout — only the wrists move. High reps work best for forearms.' },
+      { name:'Reverse Wrist Curl / Reverse Curl', muscle:'Forearm Extensors · Brachioradialis', warmup:false,
+        b1:[{label:'Set 1',text:'12–15 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'12–15 reps · drop 10%',cls:'chip-drop'}],
+        b2:[{label:'Set 1',text:'12–15 reps · to failure',cls:'chip-main'},{label:'Myo-Reps',text:'Rest 10s · 4–5 reps × 3 mini-sets',cls:'chip-adv'}],
+        tip:'For reverse wrist curl: same position as wrist curl but palms face down — curl the knuckles toward you. For reverse barbell curl: stand, overhand grip, curl the bar up like a normal curl. Both hit the forearm extensors and brachioradialis which give the forearm that thick, vascular look from every angle.' }
+    ]
+  }
+];
+
+let currentBlock = 1, currentDay = 0;
+const completed = DAYS.map(() => new Set());
+
+function loadFromStorage() {
+  try {
+    const s = localStorage.getItem('minmax4_completed');
+    if (s) JSON.parse(s).forEach((a,di) => { if(completed[di]) a.forEach(ei => completed[di].add(ei)); });
+    const b = localStorage.getItem('minmax4_block');
+    if (b) currentBlock = parseInt(b);
+  } catch(e) {}
+}
+function saveToStorage() {
+  try {
+    localStorage.setItem('minmax4_completed', JSON.stringify(completed.map(s=>[...s])));
+    localStorage.setItem('minmax4_block', String(currentBlock));
+  } catch(e) {}
+}
+
+function buildSchedule() {
+  const grid = document.getElementById('schedGrid');
+  grid.innerHTML = '';
+  SCHEDULE.forEach(s => {
+    const el = document.createElement('div');
+    const isRest = s.di === -1;
+    const isActive = s.di === currentDay;
+    el.className = 'sched-day' + (isRest?' rest':'') + (isActive?' highlight':'');
+    el.innerHTML = `
+      <div class="sched-day-name">${s.label}</div>
+      <div class="sched-day-label" style="${s.color&&isActive?'color:'+s.color:''}">${s.name}</div>
+      ${s.tag?`<div class="sched-day-tag" style="background:${s.color}22;color:${s.color};border:1px solid ${s.color}44">${s.tag}</div>`:''}
+    `;
+    if (!isRest) el.onclick = () => switchDay(s.di);
+    grid.appendChild(el);
+  });
+}
+
+function buildUI() {
+  const nav = document.getElementById('dayNav'), panels = document.getElementById('panels');
+  nav.innerHTML = ''; panels.innerHTML = '';
+  DAYS.forEach((day, di) => {
+    const tab = document.createElement('button');
+    tab.className = 'day-tab' + (di===currentDay?' active':'');
+    tab.id = 'tab-' + di;
+    tab.innerHTML = `<div class="day-tab-num">${day.num}</div><div class="day-tab-name">${day.label}</div><div class="day-tab-done${isAllDone(di)?' visible':''}" id="dot-${di}"></div>`;
+    tab.onclick = () => switchDay(di);
+    nav.appendChild(tab);
+
+    const panel = document.createElement('div');
+    panel.className = 'day-panel' + (di===currentDay?' active':'');
+    panel.id = 'panel-' + di;
+    panel.innerHTML = `
+      <div class="day-heading">
+        <h2>${day.title} <span style="color:${day.color}">${day.accent}</span></h2>
+        <div class="day-sub">${day.sub}</div>
+        <div class="day-meta-row">
+          <span class="meta-chip">${day.sets}</span>
+          <span class="meta-chip">~50 min</span>
+          <span class="meta-chip">${day.muscles}</span>
+        </div>
+      </div>
+      <div class="warmup-banner">
+        <div class="warmup-header" onclick="toggleWarmup(${di})">
+          <div class="warmup-icon">🔥</div>
+          <div style="flex:1">
+            <div class="warmup-title">Warm-Up Protocol</div>
+            <div class="warmup-sub">Before first exercise per muscle group · tap to expand</div>
+          </div>
+          <span class="warmup-chevron" id="wchev-${di}">▼</span>
+        </div>
+        <div class="warmup-body" id="wbody-${di}">
+          <div class="warmup-rule"><strong>The rule:</strong> Warm-up sets are NOT working sets — don't count them, don't push hard. Their job is to groove the movement and prepare the joint. <strong>Only warm up on the first exercise per muscle group</strong> — after that, the muscle is already warm.</div>
+          <div class="warmup-sets">
+            <div class="warmup-row"><div class="warmup-dot" style="background:#4b5563"></div><div class="warmup-row-label">Warm-Up 1</div><div class="warmup-row-desc">50% of working weight · 8 reps · easy, just moving</div></div>
+            <div class="warmup-row"><div class="warmup-dot" style="background:#6b7280"></div><div class="warmup-row-label">Warm-Up 2</div><div class="warmup-row-desc">70% of working weight · 5 reps · moderate pace</div></div>
+            <div class="warmup-row"><div class="warmup-dot" style="background:#9ca3af"></div><div class="warmup-row-label">Warm-Up 3</div><div class="warmup-row-desc">85–90% of working weight · 2–3 reps · feel the weight</div></div>
+            <div class="warmup-row" style="margin-top:4px;padding-top:10px;border-top:1px solid var(--border)">
+              <div class="warmup-dot" style="background:${day.color}"></div>
+              <div class="warmup-row-label" style="color:var(--text)">→ Set 1</div>
+              <div class="warmup-row-desc" style="color:var(--text2)">100% working weight · to complete failure</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="reset-row"><button class="reset-btn" onclick="resetDay(${di})">Reset day</button></div>
+      <div class="progress-wrap">
+        <div class="progress-top"><span>Workout progress</span><span id="prog-text-${di}">0 / ${day.exercises.length}</span></div>
+        <div class="progress-track"><div class="progress-fill" id="prog-fill-${di}" style="width:0%;background:${day.color}"></div></div>
+      </div>
+      <div class="ex-list" id="exlist-${di}"></div>
+    `;
+    panels.appendChild(panel);
+    renderExercises(di);
+    updateProgress(di);
+  });
+  buildSchedule();
+}
+
+function renderExercises(di) {
+  const list = document.getElementById('exlist-'+di);
+  if (!list) return;
+  list.innerHTML = '';
+  DAYS[di].exercises.forEach((ex, ei) => {
+    const sets = currentBlock===1 ? ex.b1 : ex.b2;
+    const isDone = completed[di].has(ei);
+    const chipsHtml = sets.map(s=>`<div class="set-chip ${s.cls}"><span class="chip-label">${s.label}</span>${s.text}</div>`).join('');
+    const warmupHtml = ex.warmup ? `
+      <div class="warmup-section-label">Warm-up sets (not counted)</div>
+      <div class="ex-sets" style="margin-bottom:8px">
+        <div class="set-chip chip-warmup"><span class="chip-label">Warm-Up 1</span>50% × 8 reps</div>
+        <div class="set-chip chip-warmup"><span class="chip-label">Warm-Up 2</span>70% × 5 reps</div>
+        <div class="set-chip chip-warmup"><span class="chip-label">Warm-Up 3</span>85–90% × 2–3 reps</div>
+      </div>
+      <div class="warmup-section-label">Working sets (to failure)</div>
+    ` : '';
+    const card = document.createElement('div');
+    card.className = 'ex-card' + (isDone?' done':'');
+    card.id = `card-${di}-${ei}`;
+    card.innerHTML = `
+      <div class="ex-top">
+        <div class="ex-num" id="num-${di}-${ei}">${ei+1}</div>
+        <div class="ex-content">
+          <div class="ex-name">${ex.name}</div>
+          <div class="ex-muscle">${ex.muscle}</div>
+          ${warmupHtml}
+          <div class="ex-sets">${chipsHtml}</div>
+        </div>
+        <div class="ex-check${isDone?' checked':''}" id="cb-${di}-${ei}" onclick="toggleCheck(${di},${ei})"></div>
+      </div>
+      <div class="ex-tip-toggle" onclick="toggleTip(${di},${ei})">
+        <div class="tip-icon">i</div>
+        <span class="tip-label">Coaching tip</span>
+        <span class="tip-chevron" id="chev-${di}-${ei}">▼</span>
+      </div>
+      <div class="ex-tip-body" id="tip-${di}-${ei}">${ex.tip}</div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function toggleWarmup(di) { document.getElementById('wbody-'+di).classList.toggle('open'); document.getElementById('wchev-'+di).classList.toggle('open'); }
+function toggleTip(di,ei) { document.getElementById(`tip-${di}-${ei}`).classList.toggle('open'); document.getElementById(`chev-${di}-${ei}`).classList.toggle('open'); }
+function toggleCheck(di,ei) {
+  const cb = document.getElementById(`cb-${di}-${ei}`), card = document.getElementById(`card-${di}-${ei}`);
+  if (completed[di].has(ei)) { completed[di].delete(ei); cb.classList.remove('checked'); card.classList.remove('done'); }
+  else { completed[di].add(ei); cb.classList.add('checked'); card.classList.add('done'); }
+  updateProgress(di); updateDot(di); saveToStorage();
+}
+function updateProgress(di) {
+  const total=DAYS[di].exercises.length, done=completed[di].size;
+  const fill=document.getElementById(`prog-fill-${di}`), text=document.getElementById(`prog-text-${di}`);
+  if(fill) fill.style.width=Math.round(done/total*100)+'%';
+  if(text) text.textContent=`${done} / ${total}`;
+}
+function updateDot(di) { const d=document.getElementById('dot-'+di); if(d) d.classList.toggle('visible',isAllDone(di)); }
+function isAllDone(di) { return completed[di].size===DAYS[di].exercises.length; }
+function resetDay(di) { completed[di].clear(); renderExercises(di); updateProgress(di); updateDot(di); saveToStorage(); }
+function switchDay(di) {
+  currentDay=di;
+  document.querySelectorAll('.day-tab').forEach((t,i)=>t.classList.toggle('active',i===di));
+  document.querySelectorAll('.day-panel').forEach((p,i)=>p.classList.toggle('active',i===di));
+  document.getElementById('tab-'+di)?.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+  buildSchedule();
+}
+function setBlock(b) {
+  currentBlock=b;
+  document.querySelectorAll('.block-btn').forEach((btn,i)=>btn.classList.toggle('active',i===b-1));
+  const banner=document.getElementById('blockBanner'), note=document.getElementById('bottomNote');
+  const weekLabel=document.getElementById('weekLabel'), weekBar=document.getElementById('weekBar');
+  if (b===1) {
+    banner.className='block-banner b1';
+    banner.innerHTML='<strong>Block 1 — Weeks 1–6 · Foundation:</strong> 1–2 hard sets per exercise to true muscular failure. Build the intensity habit before adding advanced techniques.';
+    note.innerHTML='<strong>The rule:</strong> Every working set ends at true muscular failure — the point where another rep with good form is impossible. Set 1 is your heaviest weight. Set 2 drops weight by 10–15%. No pump sets, no junk volume.';
+    weekLabel.textContent='Week 1–6'; weekBar.style.width='50%'; weekBar.style.background='var(--blue)';
+  } else {
+    banner.className='block-banner b2';
+    banner.innerHTML='<strong>Block 2 — Weeks 7–12 · Advanced Techniques:</strong> Drop sets and myo-reps push past failure for greater stimulus. Same exercises, significantly higher difficulty.';
+    note.innerHTML='<strong>Drop sets:</strong> Immediately after failure, drop 20–25% weight and continue to failure with no rest. <strong>Myo-reps:</strong> After failure, rest 10–15 seconds, do 3–5 reps — repeat 3 times. These dramatically increase fatigue — recover well and eat enough protein.';
+    weekLabel.textContent='Week 7–12'; weekBar.style.width='100%'; weekBar.style.background='var(--amber)';
+  }
+  DAYS.forEach((_,di)=>renderExercises(di));
+  saveToStorage();
+}
+
+loadFromStorage();
+buildUI();
+if (currentBlock===2) setBlock(2);
+</script>
+</body>
+</html>
