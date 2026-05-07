@@ -186,20 +186,20 @@
 
 <script>
 const SCHEDULE = [
-  { label:'Day 1', name:'Upper A', tag:'Chest & Back', color:'#e8453c', di:0 },
-  { label:'Day 2', name:'Lower',   tag:'Full Legs',   color:'#22c55e', di:1 },
-  { label:'Day 3', name:'Rest',    tag:'',            color:null,      di:-1 },
-  { label:'Day 4', name:'Upper B', tag:'Shoulders',   color:'#3b82f6', di:2 },
-  { label:'Day 5', name:'Arms',    tag:'+ Delts',     color:'#a855f7', di:3 },
-  { label:'Day 6', name:'Rest',    tag:'',            color:null,      di:-1 },
+  { label:'Day 1', name:'Chest+Back',  tag:'Upper A',    color:'#e8453c', di:0 },
+  { label:'Day 2', name:'Full Legs',   tag:'Lower',      color:'#22c55e', di:1 },
+  { label:'Day 3', name:'Rest',        tag:'',           color:null,      di:-1 },
+  { label:'Day 4', name:'Shoulders',   tag:'Upper B',    color:'#3b82f6', di:2 },
+  { label:'Day 5', name:'Arms+Delts',  tag:'Isolation',  color:'#a855f7', di:3 },
+  { label:'Day 6', name:'Rest',        tag:'',           color:null,      di:-1 },
 ];
 
 const DAYS = [
   {
-    label:'Upper A', num:'Day 1', title:'Upper', accent:'A',
-    sub:'Chest & Back — Primary Compound Push + Pull',
+    label:'Chest+Back', num:'Day 1', title:'Chest &', accent:'Back',
+    sub:'Primary Compound Push + Pull',
     muscles:'Chest · Lats · Rear Delts · Lateral Delts',
-    sets:'10 working sets', color:'#e8453c',
+    sets:'8 working sets', color:'#e8453c',
     exercises:[
       { name:'Incline Barbell Press', muscle:'Upper Chest · Anterior Delt', warmup:true,
         b1:[{label:'Set 1',text:'6–8 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'8–12 reps · drop 12%',cls:'chip-drop'}],
@@ -224,10 +224,10 @@ const DAYS = [
     ]
   },
   {
-    label:'Lower', num:'Day 2', title:'Lower', accent:'Body',
-    sub:'Full Lower — Quads, Hamstrings, Glutes, Calves & Core',
+    label:'Full Legs', num:'Day 2', title:'Full', accent:'Legs',
+    sub:'Quads, Hamstrings, Glutes, Calves & Core',
     muscles:'Quads · Hamstrings · Glutes · Calves · Core · Spinal Erectors',
-    sets:'15 working sets', color:'#22c55e',
+    sets:'17 working sets', color:'#22c55e',
     exercises:[
       { name:'Barbell Back Squat', muscle:'Quads · Glutes · Core', warmup:true,
         b1:[{label:'Set 1',text:'6–8 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'8–12 reps · drop 12%',cls:'chip-drop'}],
@@ -268,10 +268,10 @@ const DAYS = [
     ]
   },
   {
-    label:'Upper B', num:'Day 4', title:'Upper', accent:'B',
-    sub:'Shoulders & Back — OHP + Pull-Up Focus',
+    label:'Shoulders', num:'Day 4', title:'Shoulders &', accent:'Back',
+    sub:'OHP + Pull-Up Focus',
     muscles:'Shoulders · Lats · Upper Back · Rear Delts',
-    sets:'10 working sets', color:'#3b82f6',
+    sets:'8 working sets', color:'#3b82f6',
     exercises:[
       { name:'Overhead Press', muscle:'Anterior + Lateral Delt · Triceps', warmup:true,
         b1:[{label:'Set 1',text:'6–8 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'8–10 reps · drop 12%',cls:'chip-drop'}],
@@ -299,7 +299,7 @@ const DAYS = [
     label:'Arms+Delts', num:'Day 5', title:'Arms +', accent:'Delts',
     sub:'Biceps · Triceps · Lateral & Rear Deltoids · Forearms',
     muscles:'Biceps · Triceps · Lateral Delts · Rear Delts · Forearms',
-    sets:'14 working sets', color:'#a855f7',
+    sets:'13 working sets', color:'#a855f7',
     exercises:[
       { name:'Barbell / EZ-Bar Curl', muscle:'Biceps · Both Heads', warmup:true,
         b1:[{label:'Set 1',text:'8–10 reps · to failure',cls:'chip-main'},{label:'Set 2',text:'10–12 reps · drop 12%',cls:'chip-drop'}],
